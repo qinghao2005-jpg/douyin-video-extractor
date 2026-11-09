@@ -1,0 +1,7 @@
+build/
+tools/*.zip
+tools/*.jar
+tools/platform36/
+keystore.jks
+*.class
+javac.*.args
