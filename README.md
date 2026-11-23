@@ -12,8 +12,8 @@
 
 1. 在 App 内的 WebView 里加载分享页，让页面用自己的脚本取数据
 2. 拦截页面发出的接口响应，并解析页面里 `images` 数组（图集）
-3. 从作品数据里取 `play_addr`，替换成无水印的 `play` 接口地址
-4. 自己用 HttpURLConnection 下载（带 UA / Referer / Cookie），按文件头判断真实类型，写入 MediaStore
+3. 从作品数据里取 `play_addr`，保留抖音返回的带签名原地址，只把 `playwm` 换成 `play`
+4. 自己用 HttpURLConnection 下载（带 UA / Referer，不附带网页 Cookie），按文件头判断真实类型，写入 MediaStore
 
 **不做的事情**：不伪造 `a_bogus` / `msToken` 等签名参数，不批量爬取，不绕过登录。
 
@@ -24,6 +24,22 @@
 3. 普通视频：点「保存视频」；图文作品：弹窗里逐项点「保存」
 
 > 分享页结构说改就改，失效时提 issue 即可。
+
+## 更新记录
+
+### v2.4.3
+
+- 修复：解析后点保存报「服务器没返回内容」。根因是 `evaluateJavascript`
+  返回的字符串里换行是字面 `\n`（反斜杠 + n），旧代码按真正的换行符拆分，
+  整段 DOM 清单被当成一条地址，下载时服务端只回空包
+- 修复：不再把播放地址改写成 `iesdouyin.com/aweme/v1/play/?video_id=...`，
+  避免丢掉 `sign` / `file_id` 等签名参数
+- 修复：下载请求不再附带 WebView 的 Cookie（过期 Cookie 会触发空包）
+- 优化：页面里既有视频又有封面图时，只取视频，不再混进封面对比图
+
+### v2.3.2
+
+- 图集对齐、动图识别、诊断模式
 
 ## 构建
 

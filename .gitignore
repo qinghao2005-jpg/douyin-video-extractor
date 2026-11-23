@@ -5,3 +5,5 @@ tools/platform36/
 keystore.jks
 *.class
 javac.*.args
+tools/platform30/
+platform30.zip

@@ -89,16 +89,12 @@ public final class DouyinParser {
         return v;
     }
 
-    /** 把带水印的 playwm 地址换成无水印的 play 地址 */
+    /**
+     * 只把带水印的 playwm 换成 play，不再用 video_id 重新拼 iesdouyin 接口。
+     * 老写法会丢掉地址里的 sign/file_id 等签名参数，服务端会回 200 空包。
+     */
     public static String dewatermark(String u) {
-        try {
-            Matcher m = Pattern.compile("[?&]video_id=([^&]+)").matcher(u);
-            if (m.find()) {
-                return "https://www.iesdouyin.com/aweme/v1/play/?video_id="
-                        + m.group(1) + "&ratio=1080p&line=0";
-            }
-        } catch (Exception ignored) {
-        }
+        if (u == null) return "";
         return u.replace("playwm", "play");
     }
 

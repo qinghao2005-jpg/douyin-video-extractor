@@ -798,6 +798,9 @@ public class MainActivity extends Activity {
         }
         wv.evaluateJavascript(DOM_JS, value -> {
             String s = unquoteJs(value == null ? "" : value);
+            // evaluateJavascript 返回的换行是字面 "\n"（反斜杠+n），先还原再拆行，
+            // 否则整段清单会被当成一条地址，下载时服务端只会回空包。
+            s = s.replace("\\n", "\n");
             java.util.List<DouyinParser.MediaItem> list = new java.util.ArrayList<>();
             if (s.length() > 3) {
                 for (String line : s.split("\n")) {
@@ -818,6 +821,21 @@ public class MainActivity extends Activity {
             if (list.isEmpty() && pendingSrc != null) {
                 onGotUrl(pendingSrc);
                 return;
+            }
+            // 页面里既有视频又有封面图时，只留视频，避免把封面当成作品保存
+            boolean hasVideo = false;
+            for (DouyinParser.MediaItem m : list) {
+                if (m.kind == DouyinParser.MediaItem.VIDEO) {
+                    hasVideo = true;
+                    break;
+                }
+            }
+            if (hasVideo) {
+                java.util.List<DouyinParser.MediaItem> onlyVideo = new java.util.ArrayList<>();
+                for (DouyinParser.MediaItem m : list) {
+                    if (m.kind == DouyinParser.MediaItem.VIDEO) onlyVideo.add(m);
+                }
+                list = onlyVideo;
             }
             if (list.isEmpty()) {
                 setBusy(false, "解析失败：没拿到视频数据，稍后再试");
@@ -901,8 +919,7 @@ public class MainActivity extends Activity {
         c.setReadTimeout(30000);
         c.setRequestProperty("User-Agent", UA);
         c.setRequestProperty("Referer", "https://www.iesdouyin.com/");
-        String ck = CookieManager.getInstance().getCookie("https://www.iesdouyin.com/");
-        if (!TextUtils.isEmpty(ck)) c.setRequestProperty("Cookie", ck);
+        // 不再附带 WebView 的 Cookie：过期的 ttwid/msToken 会让服务端回 200 空包
         int code = c.getResponseCode();
         if (code != 200) {
             c.disconnect();
