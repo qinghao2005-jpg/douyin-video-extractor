@@ -9,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.drawable.GradientDrawable;
 import android.graphics.BitmapFactory;
 import android.content.ContentValues;
 import android.net.Uri;
@@ -97,6 +98,33 @@ public class MainActivity extends Activity {
     private String lastHtml = "";
     private int ticks;
 
+    private GradientDrawable roundBg(int color, float radiusDp) {
+        GradientDrawable d = new GradientDrawable();
+        d.setColor(color);
+        d.setCornerRadius(radiusDp * getResources().getDisplayMetrics().density);
+        return d;
+    }
+
+    private void styleButton(Button b, boolean primary) {
+        b.setAllCaps(false);
+        b.setTextSize(15);
+        b.setTypeface(null, 1);
+        b.setTextColor(primary ? 0xFFFFFFFF : 0xFF33363D);
+        b.setBackground(roundBg(primary ? 0xFFFE2C55 : 0xFFEFEFF3, 12));
+        b.setMinHeight(0);
+        b.setMinWidth(0);
+        b.setPadding(dp(12), dp(12), dp(12), dp(12));
+        b.setStateListAnimator(null);
+    }
+
+    private String versionName() {
+        try {
+            return getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+        } catch (Exception e) {
+            return "2.5.1";
+        }
+    }
+
     private int dp(int v) {
         return (int) (v * getResources().getDisplayMetrics().density + 0.5f);
     }
@@ -152,59 +180,73 @@ public class MainActivity extends Activity {
         sv.addView(root, new ViewGroup.LayoutParams(-1, -2));
         rootLayout = root;
 
+        sv.setBackgroundColor(0xFFF5F6F8);
+
         TextView title = new TextView(this);
         title.setText("抖音视频提取");
-        title.setTextSize(22);
+        title.setTextSize(24);
         title.setTypeface(null, 1);
-        title.setTextColor(0xFF111111);
+        title.setTextColor(0xFF101114);
         root.addView(title);
 
         TextView sub = new TextView(this);
-        sub.setText("v2.3.2 · 图集对齐 · 复制分享链接 → 粘贴 → 解析 → 保存");
-        sub.setTextSize(13);
-        sub.setTextColor(0xFF888888);
-        sub.setPadding(0, dp(4), 0, dp(12));
+        sub.setText("v" + versionName() + " · 复制分享链接 → 粘贴 → 解析 → 保存");
+        sub.setTextSize(12);
+        sub.setTextColor(0xFF8A8F99);
+        sub.setPadding(0, dp(6), 0, dp(16));
         root.addView(sub);
 
         etLink = new EditText(this);
         etLink.setHint("粘贴分享链接或分享口令");
-        etLink.setTextSize(15);
+        etLink.setHintTextColor(0xFFB4B9C2);
+        etLink.setTextSize(14);
         etLink.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
         etLink.setGravity(Gravity.TOP | Gravity.START);
-        etLink.setMinLines(2);
-        etLink.setPadding(dp(12), dp(10), dp(12), dp(10));
-        etLink.setBackgroundColor(0xFFF3F3F5);
-        root.addView(etLink, new LinearLayout.LayoutParams(-1, -2));
+        etLink.setMinLines(3);
+        etLink.setPadding(dp(14), dp(12), dp(14), dp(12));
+        etLink.setTextColor(0xFF1B1B1F);
+        etLink.setBackground(roundBg(0xFFFFFFFF, 16));
+        LinearLayout.LayoutParams elp = new LinearLayout.LayoutParams(-1, -2);
+        elp.bottomMargin = dp(12);
+        root.addView(etLink, elp);
 
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
-        row.setPadding(0, dp(10), 0, 0);
         Button btnPaste = new Button(this);
         btnPaste.setText("粘贴");
+        styleButton(btnPaste, false);
         Button btnParse = new Button(this);
         btnParse.setText("解析");
-        row.addView(btnPaste, new LinearLayout.LayoutParams(0, -2, 1f));
-        row.addView(btnParse, new LinearLayout.LayoutParams(0, -2, 1f));
+        styleButton(btnParse, true);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(0, -2, 1f);
+        blp.rightMargin = dp(6);
+        row.addView(btnPaste, blp);
+        LinearLayout.LayoutParams blp2 = new LinearLayout.LayoutParams(0, -2, 1f);
+        blp2.leftMargin = dp(6);
+        row.addView(btnParse, blp2);
         root.addView(row);
 
         pb = new ProgressBar(this);
         pb.setVisibility(View.GONE);
-        LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(dp(32), dp(32));
+        LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(dp(28), dp(28));
         plp.gravity = Gravity.CENTER_HORIZONTAL;
-        plp.topMargin = dp(12);
+        plp.topMargin = dp(14);
         root.addView(pb, plp);
 
         tvStatus = new TextView(this);
-        tvStatus.setTextSize(13);
-        tvStatus.setTextColor(0xFF666666);
-        tvStatus.setPadding(0, dp(10), 0, 0);
-        root.addView(tvStatus);
+        tvStatus.setTextSize(12);
+        tvStatus.setTextColor(0xFF6B7280);
+        tvStatus.setPadding(dp(12), dp(10), dp(12), dp(10));
+        tvStatus.setBackground(roundBg(0xFFFFFFFF, 12));
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-1, -2);
+        slp.topMargin = dp(12);
+        root.addView(tvStatus, slp);
 
         tvLog = new TextView(this);
         tvLog.setTextSize(11);
-        tvLog.setTextColor(0xFF555555);
+        tvLog.setTextColor(0xFF6B7280);
         tvLog.setTypeface(android.graphics.Typeface.MONOSPACE);
-        tvLog.setPadding(0, dp(8), 0, 0);
+        tvLog.setPadding(dp(4), dp(8), dp(4), 0);
         tvLog.setVisibility(View.GONE);
         tvLog.setTextIsSelectable(true);
         root.addView(tvLog);
@@ -213,21 +255,23 @@ public class MainActivity extends Activity {
         ivCover.setVisibility(View.GONE);
         ivCover.setAdjustViewBounds(true);
         ivCover.setScaleType(ImageView.ScaleType.CENTER_CROP);
-        ivCover.setBackgroundColor(0xFFEEEEEE);
-        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(-1, dp(200));
-        ilp.topMargin = dp(12);
+        ivCover.setBackground(roundBg(0xFFE8EAEE, 18));
+        ivCover.setClipToOutline(true);
+        LinearLayout.LayoutParams ilp = new LinearLayout.LayoutParams(-1, dp(210));
+        ilp.topMargin = dp(14);
         root.addView(ivCover, ilp);
 
         tvInfo = new TextView(this);
         tvInfo.setTextSize(15);
-        tvInfo.setTextColor(0xFF222222);
-        tvInfo.setPadding(0, dp(10), 0, 0);
+        tvInfo.setTypeface(null, 1);
+        tvInfo.setTextColor(0xFF1B1B1F);
+        tvInfo.setPadding(0, dp(12), 0, 0);
         tvInfo.setTextIsSelectable(true);
         root.addView(tvInfo);
 
         tvUrl = new TextView(this);
         tvUrl.setTextSize(11);
-        tvUrl.setTextColor(0xFF1A73E8);
+        tvUrl.setTextColor(0xFF9AA1AC);
         tvUrl.setPadding(0, dp(6), 0, 0);
         tvUrl.setTextIsSelectable(true);
         root.addView(tvUrl);
@@ -238,27 +282,35 @@ public class MainActivity extends Activity {
 
         LinearLayout row2 = new LinearLayout(this);
         row2.setOrientation(LinearLayout.HORIZONTAL);
-        row2.setPadding(0, dp(10), 0, 0);
+        row2.setPadding(0, dp(12), 0, 0);
         btnSave = new Button(this);
         btnSave.setText("保存视频");
         btnSave.setEnabled(false);
+        styleButton(btnSave, true);
         btnCopy = new Button(this);
         btnCopy.setText("复制直链");
         btnCopy.setEnabled(false);
-        row2.addView(btnSave, new LinearLayout.LayoutParams(0, -2, 1f));
-        row2.addView(btnCopy, new LinearLayout.LayoutParams(0, -2, 1f));
+        styleButton(btnCopy, false);
+        LinearLayout.LayoutParams s1 = new LinearLayout.LayoutParams(0, -2, 1f);
+        s1.rightMargin = dp(6);
+        LinearLayout.LayoutParams s2 = new LinearLayout.LayoutParams(0, -2, 1f);
+        s2.leftMargin = dp(6);
+        row2.addView(btnSave, s1);
+        row2.addView(btnCopy, s2);
         root.addView(row2);
 
         TextView histTitle = new TextView(this);
         histTitle.setText("最近解析");
-        histTitle.setTextSize(13);
-        histTitle.setTextColor(0xFF888888);
-        histTitle.setPadding(0, dp(22), 0, dp(6));
+        histTitle.setTextSize(12);
+        histTitle.setTextColor(0xFF9AA1AC);
+        histTitle.setPadding(0, dp(26), 0, dp(8));
         root.addView(histTitle);
 
         llHistory = new LinearLayout(this);
         llHistory.setOrientation(LinearLayout.VERTICAL);
         root.addView(llHistory);
+
+        root.setPadding(dp(16), dp(18), dp(16), dp(28));
 
         btnPaste.setOnClickListener(v -> {
             ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
@@ -649,11 +701,16 @@ public class MainActivity extends Activity {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(0, dp(8), 0, dp(8));
+            row.setPadding(dp(10), dp(10), dp(10), dp(10));
+            row.setBackground(roundBg(0xFFFFFFFF, 14));
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
+            rlp.bottomMargin = dp(8);
+            row.setLayoutParams(rlp);
 
             ImageView iv = new ImageView(this);
             iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            iv.setBackgroundColor(0xFFEEEEEE);
+            iv.setBackground(roundBg(0xFFE8EAEE, 12));
+            iv.setClipToOutline(true);
             row.addView(iv, new LinearLayout.LayoutParams(dp(84), dp(84)));
 
             TextView label = new TextView(this);
@@ -661,11 +718,15 @@ public class MainActivity extends Activity {
                     : it.kind == DouyinParser.MediaItem.IMAGE ? "图片" : "视频";
             label.setText("第 " + (i + 1) + " 项 · " + kind);
             label.setTextSize(14);
+            label.setTextColor(0xFF1B1B1F);
             label.setPadding(dp(10), 0, dp(6), 0);
             row.addView(label, new LinearLayout.LayoutParams(0, -2, 1f));
 
             Button b = new Button(this);
             b.setText("保存");
+            styleButton(b, false);
+            b.setTextSize(13);
+            b.setPadding(dp(16), dp(8), dp(16), dp(8));
             b.setOnClickListener(v -> saveItem(idx));
             row.addView(b, new LinearLayout.LayoutParams(-2, -2));
 
@@ -695,11 +756,16 @@ public class MainActivity extends Activity {
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setGravity(Gravity.CENTER_VERTICAL);
-            row.setPadding(0, dp(6), 0, dp(6));
+            row.setPadding(dp(8), dp(8), dp(8), dp(8));
+            row.setBackground(roundBg(0xFFFFFFFF, 12));
+            LinearLayout.LayoutParams rlp = new LinearLayout.LayoutParams(-1, -2);
+            rlp.bottomMargin = dp(6);
+            row.setLayoutParams(rlp);
 
             ImageView iv = new ImageView(this);
             iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            iv.setBackgroundColor(0xFFEEEEEE);
+            iv.setBackground(roundBg(0xFFE8EAEE, 12));
+            iv.setClipToOutline(true);
             row.addView(iv, new LinearLayout.LayoutParams(dp(64), dp(64)));
 
             TextView label = new TextView(this);
@@ -707,11 +773,15 @@ public class MainActivity extends Activity {
                     : it.kind == DouyinParser.MediaItem.IMAGE ? "图片" : "视频";
             label.setText("第 " + (i + 1) + " 项 · " + kind);
             label.setTextSize(14);
+            label.setTextColor(0xFF1B1B1F);
             label.setPadding(dp(10), 0, dp(6), 0);
             row.addView(label, new LinearLayout.LayoutParams(0, -2, 1f));
 
             Button b = new Button(this);
             b.setText("保存");
+            styleButton(b, false);
+            b.setTextSize(13);
+            b.setPadding(dp(16), dp(8), dp(16), dp(8));
             b.setOnClickListener(v -> saveItem(idx));
             row.addView(b, new LinearLayout.LayoutParams(-2, -2));
 
@@ -1135,7 +1205,11 @@ public class MainActivity extends Activity {
     private void setBusy(boolean busy, String msg) {
         pb.setVisibility(busy ? View.VISIBLE : View.GONE);
         tvStatus.setText(msg);
-        tvStatus.setTextColor(busy ? 0xFF666666 : (msg.startsWith("解析失败") ? 0xFFD93025 : 0xFF1A7F37));
+        boolean err = msg != null && (msg.startsWith("解析失败") || msg.contains("失败"));
+        int bg = busy ? 0xFFFFFFFF : (err ? 0xFFFDECEE : 0xFFEAF7EE);
+        int fg = busy ? 0xFF6B7280 : (err ? 0xFFD93025 : 0xFF1A7F37);
+        tvStatus.setTextColor(fg);
+        tvStatus.setBackground(roundBg(bg, 12));
     }
 
     private void hideKeyboard() {
@@ -1214,10 +1288,14 @@ public class MainActivity extends Activity {
             TextView t = new TextView(this);
             String title = o.optString("t", "视频");
             if (title.length() > 30) title = title.substring(0, 30) + "…";
-            t.setText("· " + title);
+            t.setText(title);
             t.setTextSize(14);
-            t.setTextColor(0xFF1A73E8);
-            t.setPadding(0, dp(8), 0, dp(8));
+            t.setTextColor(0xFF3A3F47);
+            t.setPadding(dp(14), dp(12), dp(14), dp(12));
+            t.setBackground(roundBg(0xFFFFFFFF, 12));
+            LinearLayout.LayoutParams hlp = new LinearLayout.LayoutParams(-1, -2);
+            hlp.bottomMargin = dp(8);
+            t.setLayoutParams(hlp);
             t.setOnClickListener(v -> {
                 String src = o.optString("s", "");
                 etLink.setText(src.isEmpty() ? o.optString("u", "") : src);
