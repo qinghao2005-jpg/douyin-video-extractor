@@ -825,6 +825,8 @@ public class MainActivity extends Activity {
                 return;
             }
             // 页面里既有视频又有封面图时，只留视频，避免把封面当成作品保存
+            // 只过滤页面上混进来的封面缩略图、logo、头像；
+            // 真正的作品图片要保留，混合作品才能一键全部保存
             boolean hasVideo = false;
             for (DouyinParser.MediaItem m : list) {
                 if (m.kind == DouyinParser.MediaItem.VIDEO) {
@@ -832,12 +834,21 @@ public class MainActivity extends Activity {
                     break;
                 }
             }
-            if (hasVideo) {
-                java.util.List<DouyinParser.MediaItem> onlyVideo = new java.util.ArrayList<>();
+            if (!list.isEmpty()) {
+                java.util.List<DouyinParser.MediaItem> kept = new java.util.ArrayList<>();
                 for (DouyinParser.MediaItem m : list) {
-                    if (m.kind == DouyinParser.MediaItem.VIDEO) onlyVideo.add(m);
+                    String u = m.url.toLowerCase();
+                    if (u.contains("logo-1128") || u.contains("icon_play")
+                            || u.contains("aweme-avatar")) {
+                        continue;
+                    }
+                    if (hasVideo && (u.contains("cropcenter:300:400")
+                            || u.contains("walign-adapt-aq"))) {
+                        continue;
+                    }
+                    kept.add(m);
                 }
-                list = onlyVideo;
+                if (!kept.isEmpty()) list = kept;
             }
             if (list.isEmpty()) {
                 setBusy(false, "解析失败：没拿到视频数据，稍后再试");
