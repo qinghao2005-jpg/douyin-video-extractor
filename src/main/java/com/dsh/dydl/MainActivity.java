@@ -626,6 +626,7 @@ public class MainActivity extends Activity {
             v.title = title;
             v.cover = list.get(0).thumb;
             current = v;
+            btnSave.setText("保存视频");
             btnSave.setEnabled(true);
             btnCopy.setEnabled(true);
             if (!TextUtils.isEmpty(v.cover)) {
@@ -639,6 +640,8 @@ public class MainActivity extends Activity {
             return;
         }
         current = null;
+        btnSave.setText("一键保存");
+        btnSave.setEnabled(true);
         int n = list.size();
         for (int i = 0; i < n; i++) {
             final int idx = i;
@@ -677,8 +680,7 @@ public class MainActivity extends Activity {
         llItems.requestLayout();
         rootLayout.requestLayout();
         log("rows=" + llItems.getChildCount() + " n=" + n);
-        setBusy(false, "这是图文作品，共 " + n + " 项，点右边的「保存」选择要存的");
-        pickerDialog(n);
+        setBusy(false, "共 " + n + " 项，点「一键保存」全部存，或点单项「保存」");
     }
 
     /** 弹窗列出全部素材，每项一个保存按钮 */
@@ -881,7 +883,11 @@ public class MainActivity extends Activity {
     }
 
     private void save() {
-        if (current == null || downloading) return;
+        if (downloading) return;
+        if (current == null) {
+            saveAll();
+            return;
+        }
         final String url = DouyinParser.dewatermark(current.url);
         final String title = current.title;
         String name = sanitize(title);
@@ -908,6 +914,53 @@ public class MainActivity extends Activity {
                     setBusy(false, "下载失败：" + (m == null ? e.getClass().getSimpleName() : m));
                 });
             }
+        });
+    }
+
+    /** 一键保存：按页面顺序把多图 / 视频 / 动图全部存下来 */
+    private void saveAll() {
+        if (items.isEmpty() || downloading) return;
+        final java.util.List<DouyinParser.MediaItem> list =
+                new java.util.ArrayList<>(items);
+        final int total = list.size();
+        String base = sanitize(tvInfo.getText().toString());
+        if (base.isEmpty()) base = "douyin";
+        final String baseName = base;
+        final String stamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(new Date());
+        downloading = true;
+        btnSave.setEnabled(false);
+        setBusy(true, "开始保存 " + total + " 项…");
+        pool.execute(() -> {
+            int ok = 0;
+            String firstErr = null;
+            for (int i = 0; i < total; i++) {
+                final int no = i + 1;
+                DouyinParser.MediaItem it = list.get(i);
+                final boolean image = it.kind == DouyinParser.MediaItem.IMAGE;
+                final String fileName = baseName + "_" + no + "_" + stamp + (image ? ".jpg" : ".mp4");
+                final String url = DouyinParser.dewatermark(it.url);
+                ui.post(() -> setBusy(true, "正在保存第 " + no + "/" + total + " 项…"));
+                try {
+                    downloadTo(url, fileName, it.url, image);
+                    ok++;
+                } catch (Exception e) {
+                    if (firstErr == null) {
+                        String m = e.getMessage();
+                        firstErr = m == null ? e.getClass().getSimpleName() : m;
+                    }
+                }
+            }
+            final int okCount = ok;
+            final String err = firstErr;
+            ui.post(() -> {
+                downloading = false;
+                btnSave.setEnabled(true);
+                if (err == null) {
+                    setBusy(false, "全部 " + total + " 项已保存到相册");
+                } else {
+                    setBusy(false, "已保存 " + okCount + "/" + total + " 项；第一个失败原因：" + err);
+                }
+            });
         });
     }
 
